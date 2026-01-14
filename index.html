@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta Manual Presbiteriano - IA</title>
+    <title>Consulta Manual Presbiteriano - IA (Rodrigo Niskier)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
-        /* --- ESTILO (CSS) --- */
+        /* --- ESTILO (Mantido igual, com pequenos ajustes) --- */
         :root {
-            --primary-color: #004631; /* Verde Presbiteriano */
+            --primary-color: #004631;
             --secondary-color: #f4f4f4;
             --text-color: #333;
         }
@@ -40,7 +41,6 @@
         header h1 { margin: 0; font-size: 1.5rem; }
         header p { margin: 5px 0 0; opacity: 0.8; font-size: 0.9rem; }
 
-        /* Área dos Botões de Atalho */
         .quick-actions {
             padding: 15px;
             background: #ddd;
@@ -67,7 +67,6 @@
             color: white;
         }
 
-        /* Área do Chat */
         #chat-window {
             flex: 1;
             padding: 20px;
@@ -98,7 +97,6 @@
             border-bottom-left-radius: 0;
         }
 
-        /* Área de Input */
         .input-area {
             padding: 20px;
             background: white;
@@ -131,6 +129,20 @@
         }
         
         .loading { font-style: italic; color: #666; font-size: 0.8rem; }
+        
+        /* Barra de progresso para o carregamento inicial */
+        #loading-bar-container {
+            width: 100%;
+            height: 4px;
+            background-color: #ddd;
+            display: none;
+        }
+        #loading-bar {
+            height: 100%;
+            background-color: #c99c30; /* Dourado */
+            width: 0%;
+            transition: width 0.2s;
+        }
     </style>
 </head>
 <body>
@@ -138,118 +150,136 @@
 <div class="app-container">
     <header>
         <h1>Conselheiro IPB (IA)</h1>
-        <p>Consulta ao Manual Presbiteriano - Gemini 2.5 Flash</p>
+        <p>Consulta Rápida via Texto - Rodrigo Niskier</p>
     </header>
+    
+    <div id="loading-bar-container"><div id="loading-bar"></div></div>
 
     <div class="quick-actions">
-        <button class="action-btn" onclick="setContext('Sou Pastor. Quais são meus deveres principais segundo o manual?')">Sou Pastor</button>
-        <button class="action-btn" onclick="setContext('Sou Presbítero. O que o manual diz sobre minhas funções no Conselho?')">Sou Presbítero</button>
-        <button class="action-btn" onclick="setContext('Sou Diácono. Quais as regras para a beneficência e ordem?')">Sou Diácono</button>
-        <button class="action-btn" onclick="setContext('Como funciona a disciplina eclesiástica?')">Disciplina</button>
-        <button class="action-btn" onclick="setContext('Quais são as regras para reuniões de Concílios?')">Concílios</button>
+        <button class="action-btn" onclick="setContext('Sou Pastor. Quais são meus deveres?')">Sou Pastor</button>
+        <button class="action-btn" onclick="setContext('Sou Presbítero. Funções no Conselho?')">Sou Presbítero</button>
+        <button class="action-btn" onclick="setContext('Sou Diácono. Regras de beneficência?')">Sou Diácono</button>
+        <button class="action-btn" onclick="setContext('Como funciona a disciplina?')">Disciplina</button>
+        <button class="action-btn" onclick="setContext('Regras para reuniões de Concílios?')">Concílios</button>
     </div>
 
     <div id="chat-window">
         <div class="message ai">
-            Olá! Estou carregando o Manual Presbiteriano para poder te ajudar. Aguarde um instante...
+            Olá! Estou lendo e extraindo o texto do Manual Presbiteriano para agilizar a consulta. Isso acontece apenas uma vez...
         </div>
     </div>
 
     <div class="input-area">
-        <input type="text" id="user-input" placeholder="Digite sua dúvida sobre o manual..." disabled>
+        <input type="text" id="user-input" placeholder="Digite sua dúvida..." disabled>
         <button id="send-btn" onclick="sendMessage()" disabled>Enviar</button>
     </div>
 </div>
 
 <script>
-    /* --- LÓGICA (JAVASCRIPT) --- */
+    /* --- LÓGICA OTIMIZADA --- */
 
-    // 1. CONFIGURAÇÃO
-    // COLORA SUA API KEY AQUI. Cuidado ao compartilhar este arquivo.
     const API_KEY = 'AIzaSyCdTJMpXFRw6gZ9UH53G1DBYaSZhuIvJDI'; 
-    const PDF_FILENAME = 'manual_presbiteriano_2024.pdf'; // Nome exato do arquivo na pasta
+    const PDF_FILENAME = 'manual_presbiteriano_2024.pdf';
 
-    let pdfBase64 = null; // Vamos armazenar o PDF convertido aqui
+    let manualFullText = ""; // Aqui guardaremos o TEXTO extraído, não o PDF binário
 
     const chatWindow = document.getElementById('chat-window');
     const userInput = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
+    const loadingContainer = document.getElementById('loading-bar-container');
+    const loadingBar = document.getElementById('loading-bar');
 
-    // 2. FUNÇÃO INICIAL: Carregar e converter o PDF
-    async function loadPdf() {
+    // Configurar o worker do PDF.js (Necessário para a biblioteca funcionar)
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+    // 1. CARREGAMENTO E EXTRAÇÃO DE TEXTO
+    async function loadAndExtractPdf() {
         try {
-            const response = await fetch(PDF_FILENAME);
-            if (!response.ok) throw new Error("Não foi possível encontrar o arquivo PDF.");
+            loadingContainer.style.display = 'block';
             
-            const blob = await response.blob();
+            // Carregar o documento
+            const loadingTask = pdfjsLib.getDocument(PDF_FILENAME);
+            const pdf = await loadingTask.promise;
             
-            // Converter Blob para Base64
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                // Remove o prefixo "data:application/pdf;base64," para enviar à API
-                pdfBase64 = reader.result.split(',')[1];
+            const totalPages = pdf.numPages;
+            let extractedText = "";
+
+            // Ler página por página
+            for (let i = 1; i <= totalPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
                 
-                // Habilitar a interface
-                addMessage("ai", "Manual carregado com sucesso! Estou pronto para responder perguntas sobre Pastores, Presbíteros, Diáconos e Concílios.");
-                userInput.disabled = false;
-                sendBtn.disabled = false;
-            };
-            reader.readAsDataURL(blob);
+                // Juntar as strings da página
+                const pageText = textContent.items.map(item => item.str).join(' ');
+                extractedText += `\n--- PÁGINA ${i} ---\n` + pageText;
+
+                // Atualizar barra de progresso
+                const percent = (i / totalPages) * 100;
+                loadingBar.style.width = percent + '%';
+            }
+
+            manualFullText = extractedText;
+            
+            loadingContainer.style.display = 'none';
+            addMessage("ai", `Pronto! Li ${totalPages} páginas. Agora as consultas serão muito rápidas.`);
+            userInput.disabled = false;
+            sendBtn.disabled = false;
 
         } catch (error) {
-            addMessage("ai", "Erro ao carregar o PDF: " + error.message + ". Verifique se o arquivo está na mesma pasta e se você está rodando em um servidor local.");
+            loadingContainer.style.display = 'none';
+            addMessage("ai", "Erro ao ler o PDF: " + error.message + ". Verifique se o arquivo está na pasta e se está usando um servidor local (Live Server).");
             console.error(error);
         }
     }
 
-    // 3. FUNÇÃO: Adicionar mensagem na tela
     function addMessage(sender, text) {
         const div = document.createElement('div');
         div.className = `message ${sender}`;
-        div.innerText = text;
+        
+        // Converter quebras de linha em HTML simples para melhor leitura
+        // Se a IA mandar Markdown básico como negrito, o innerText ignora, 
+        // mas para manter simples e seguro, usaremos innerText ou replace básico
+        div.innerHTML = text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
+        
         chatWindow.appendChild(div);
-        chatWindow.scrollTop = chatWindow.scrollHeight; // Rolar para baixo
+        chatWindow.scrollTop = chatWindow.scrollHeight;
     }
 
-    // 4. FUNÇÃO: Ação dos botões rápidos
     function setContext(query) {
         userInput.value = query;
         sendMessage();
     }
 
-    // 5. FUNÇÃO PRINCIPAL: Enviar para o Gemini
+    // 2. ENVIAR APENAS O TEXTO PARA O GEMINI
     async function sendMessage() {
         const text = userInput.value.trim();
         if (!text) return;
 
-        // Mostrar pergunta do usuário
         addMessage("user", text);
         userInput.value = '';
         userInput.disabled = true;
         sendBtn.disabled = true;
 
-        // Feedback de carregamento
         const loadingDiv = document.createElement('div');
         loadingDiv.className = 'message ai loading';
-        loadingDiv.innerText = 'Consultando o manual...';
+        loadingDiv.innerText = 'Consultando...';
         chatWindow.appendChild(loadingDiv);
 
         try {
-            // Montar o corpo da requisição para o Gemini 2.5 Flash
+            // Corpo da requisição simplificado (Apenas TEXTO)
             const requestBody = {
                 contents: [{
                     parts: [
                         {
-                            text: "Você é um assistente especialista na Constituição da Igreja Presbiteriana do Brasil (IPB). Use o documento PDF fornecido como fonte absoluta da verdade. Responda de forma didática, citando os artigos ou capítulos relevantes. Se a resposta não estiver no manual, informe isso."
-                        },
-                        {
-                            inline_data: {
-                                mime_type: "application/pdf",
-                                data: pdfBase64
-                            }
-                        },
-                        {
-                            text: text
+                            text: `Você é um assistente especialista na Constituição da Igreja Presbiteriana do Brasil (IPB). 
+                            
+                            CONTEXTO DO MANUAL (Use isso como base absoluta):
+                            ${manualFullText}
+                            
+                            PERGUNTA DO USUÁRIO:
+                            ${text}
+                            
+                            Responda de forma direta, clara e cite os artigos.`
                         }
                     ]
                 }]
@@ -264,8 +294,6 @@
             });
 
             const data = await response.json();
-
-            // Remover aviso de carregamento
             chatWindow.removeChild(loadingDiv);
 
             if (data.error) {
@@ -285,16 +313,13 @@
         }
     }
 
-    // Iniciar carregamento ao abrir
-    window.onload = loadPdf;
+    window.onload = loadAndExtractPdf;
 
-    // Permitir enviar com Enter
     userInput.addEventListener("keypress", function(event) {
         if (event.key === "Enter") {
             sendMessage();
         }
     });
-
 </script>
 
 </body>
