@@ -1,22 +1,26 @@
 /* api/consultar.js */
 export default async function handler(req, res) {
-    // 1. Segurança: Permitir apenas método POST
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    // 2. Pegar a chave das Configurações da Vercel (Variáveis de Ambiente)
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-        return res.status(500).json({ error: { message: "Chave de API não configurada no servidor." } });
+        return res.status(500).json({ error: { message: "Chave de API não configurada." } });
     }
 
     try {
         const { prompt } = req.body;
 
-        // 3. Chamar o Google Gemini
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro:generateContent?key=${apiKey}`, {
+        // --- MUDANÇA DE MODELO AQUI ---
+        // Opção 1 (Rápida - Recomendada): 'gemini-1.5-flash'
+        // Opção 2 (Inteligente - Lenta): 'gemini-1.5-pro'
+        // Opção 3 (A do seu PDF): 'gemini-3-pro-preview' (Cuidado: pode não estar ativa ainda e dar erro 404)
+        
+        const modelName = 'gemini-3-flash'; // <--- Mude aqui para testar outros
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -28,7 +32,10 @@ export default async function handler(req, res) {
 
         const data = await response.json();
 
-        // 4. Devolver a resposta para o seu site
+        if (data.error) {
+            throw new Error(data.error.message);
+        }
+
         res.status(200).json(data);
 
     } catch (error) {
