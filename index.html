@@ -57,6 +57,14 @@
 </div>
 
 <script>
+    /* --- LÓGICA (JAVASCRIPT) --- */
+
+    // 1. CONFIGURAÇÃO
+    // COLORA SUA API KEY AQUI. Cuidado ao compartilhar este arquivo.
+    const API_KEY = ''; 
+    const PDF_FILENAME = 'manual_presbiteriano_2024.pdf'; // Nome exato do arquivo na pasta
+
+    let pdfBase64 = null; // Vamos armazenar o PDF convertido aqui
     const PDF_FILENAME = './manual_presbiteriano_2024.pdf';
     
     // Agora armazenamos as páginas separadamente para poder filtrar
