@@ -3,254 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta Manual Presbiteriano - IA (Rodrigo Niskier)</title>
+    <title>Manual Presbiteriano - Rodrigo Niskier</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
-        /* --- ESTILO (Mantido igual, com pequenos ajustes) --- */
-        :root {
-            --primary-color: #004631;
-            --secondary-color: #f4f4f4;
-            --text-color: #333;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #eef2f5;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            height: 100vh;
-        }
-
-        .app-container {
-            width: 100%;
-            max-width: 800px;
-            background: white;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-
-        header {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-
-        header h1 { margin: 0; font-size: 1.5rem; }
-        header p { margin: 5px 0 0; opacity: 0.8; font-size: 0.9rem; }
-
-        .quick-actions {
-            padding: 15px;
-            background: #ddd;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .action-btn {
-            background-color: white;
-            border: 1px solid var(--primary-color);
-            color: var(--primary-color);
-            padding: 8px 12px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
-            font-size: 0.9rem;
-        }
-
-        .action-btn:hover {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        #chat-window {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .message {
-            max-width: 80%;
-            padding: 10px 15px;
-            border-radius: 10px;
-            line-height: 1.5;
-        }
-
-        .message.user {
-            align-self: flex-end;
-            background-color: var(--primary-color);
-            color: white;
-            border-bottom-right-radius: 0;
-        }
-
-        .message.ai {
-            align-self: flex-start;
-            background-color: #e9e9e9;
-            color: var(--text-color);
-            border-bottom-left-radius: 0;
-        }
-
-        .input-area {
-            padding: 20px;
-            background: white;
-            border-top: 1px solid #ddd;
-            display: flex;
-            gap: 10px;
-        }
-
-        input[type="text"] {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            outline: none;
-        }
-
-        button#send-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        button#send-btn:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
+        :root { --primary: #004631; --bg: #eef2f5; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; height: 100vh; }
+        .app-container { width: 100%; max-width: 800px; background: white; display: flex; flex-direction: column; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
-        .loading { font-style: italic; color: #666; font-size: 0.8rem; }
+        header { background: var(--primary); color: white; padding: 15px; text-align: center; }
+        header h1 { margin: 0; font-size: 1.4rem; }
         
-        /* Barra de progresso para o carregamento inicial */
-        #loading-bar-container {
-            width: 100%;
-            height: 4px;
-            background-color: #ddd;
-            display: none;
-        }
-        #loading-bar {
-            height: 100%;
-            background-color: #c99c30; /* Dourado */
-            width: 0%;
-            transition: width 0.2s;
-        }
+        .quick-actions { padding: 10px; background: #ddd; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+        .action-btn { background: white; border: 1px solid var(--primary); color: var(--primary); padding: 6px 12px; border-radius: 15px; cursor: pointer; font-size: 0.85rem; }
+        .action-btn:hover { background: var(--primary); color: white; }
+
+        #chat-window { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .message { max-width: 85%; padding: 10px 15px; border-radius: 10px; line-height: 1.5; font-size: 0.95rem; }
+        .message.user { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 0; }
+        .message.ai { align-self: flex-start; background: #f1f1f1; color: #333; border-bottom-left-radius: 0; }
+        .info-msg { font-size: 0.8rem; color: #666; text-align: center; margin: 5px 0; font-style: italic; }
+        
+        .input-area { padding: 15px; border-top: 1px solid #ddd; display: flex; gap: 10px; }
+        input[type="text"] { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 5px; outline: none; }
+        button#send-btn { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+
+        #loading-bar-container { width: 100%; height: 4px; background: #ddd; }
+        #loading-bar { height: 100%; background: #c99c30; width: 0%; transition: width 0.2s; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <header>
-        <h1>Conselheiro IPB (IA)</h1>
-        <p>Consulta Rápida via Texto - Rodrigo Niskier</p>
+        <h1>Conselheiro IPB - Rodrigo Niskier</h1>
+        <div id="loading-bar-container"><div id="loading-bar"></div></div>
     </header>
-    
-    <div id="loading-bar-container"><div id="loading-bar"></div></div>
 
     <div class="quick-actions">
         <button class="action-btn" onclick="setContext('Sou Pastor. Quais são meus deveres?')">Sou Pastor</button>
         <button class="action-btn" onclick="setContext('Sou Presbítero. Funções no Conselho?')">Sou Presbítero</button>
         <button class="action-btn" onclick="setContext('Sou Diácono. Regras de beneficência?')">Sou Diácono</button>
         <button class="action-btn" onclick="setContext('Como funciona a disciplina?')">Disciplina</button>
-        <button class="action-btn" onclick="setContext('Regras para reuniões de Concílios?')">Concílios</button>
+        <button class="action-btn" onclick="setContext('Quórum para reuniões?')">Quórum</button>
     </div>
 
-    <div id="chat-window">
-        <div class="message ai">
-            Olá! Estou lendo e extraindo o texto do Manual Presbiteriano para agilizar a consulta. Isso acontece apenas uma vez...
-        </div>
-    </div>
+    <div id="chat-window"></div>
 
     <div class="input-area">
-        <input type="text" id="user-input" placeholder="Digite sua dúvida..." disabled>
+        <input type="text" id="user-input" placeholder="Carregando manual..." disabled>
         <button id="send-btn" onclick="sendMessage()" disabled>Enviar</button>
     </div>
 </div>
 
 <script>
-    /* --- LÓGICA OTIMIZADA --- */
+    /* --- LÓGICA (JAVASCRIPT) --- */
 
     const API_KEY = ''; 
     const PDF_FILENAME = 'manual_presbiteriano_2024.pdf';
+    // 1. CONFIGURAÇÃO
+    // COLORA SUA API KEY AQUI. Cuidado ao compartilhar este arquivo.
+    const API_KEY = ''; 
+    const PDF_FILENAME = 'manual_presbiteriano_2024.pdf'; // Nome exato do arquivo na pasta
 
-    let manualFullText = ""; // Aqui guardaremos o TEXTO extraído, não o PDF binário
+    let pdfBase64 = null; // Vamos armazenar o PDF convertido aqui
+    const PDF_FILENAME = './manual_presbiteriano_2024.pdf';
+    
+    // Agora armazenamos as páginas separadamente para poder filtrar
+    let manualPages = []; 
 
     const chatWindow = document.getElementById('chat-window');
     const userInput = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
-    const loadingContainer = document.getElementById('loading-bar-container');
     const loadingBar = document.getElementById('loading-bar');
 
-    // Configurar o worker do PDF.js (Necessário para a biblioteca funcionar)
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-    // 1. CARREGAMENTO E EXTRAÇÃO DE TEXTO
+    // 1. CARREGAR E DIVIDIR O PDF
     async function loadAndExtractPdf() {
+        addMessage("ai", "Iniciando leitura e indexação do Manual...");
         try {
-            loadingContainer.style.display = 'block';
-            
-            // Carregar o documento
             const loadingTask = pdfjsLib.getDocument(PDF_FILENAME);
             const pdf = await loadingTask.promise;
-            
             const totalPages = pdf.numPages;
-            let extractedText = "";
 
-            // Ler página por página
             for (let i = 1; i <= totalPages; i++) {
                 const page = await pdf.getPage(i);
                 const textContent = await page.getTextContent();
-                
-                // Juntar as strings da página
                 const pageText = textContent.items.map(item => item.str).join(' ');
-                extractedText += `\n--- PÁGINA ${i} ---\n` + pageText;
-
-                // Atualizar barra de progresso
-                const percent = (i / totalPages) * 100;
-                loadingBar.style.width = percent + '%';
+                
+                // Guardamos página por página
+                manualPages.push({
+                    number: i,
+                    text: pageText.toLowerCase(), // Texto minúsculo para busca
+                    originalText: pageText        // Texto original para exibir/enviar
+                });
+                
+                loadingBar.style.width = ((i / totalPages) * 100) + '%';
             }
 
-            manualFullText = extractedText;
-            
-            loadingContainer.style.display = 'none';
-            addMessage("ai", `Pronto! Li ${totalPages} páginas. Agora as consultas serão muito rápidas.`);
+            addMessage("ai", `Leitura concluída! ${totalPages} páginas indexadas. O sistema agora economiza sua cota selecionando apenas páginas relevantes.`);
+            userInput.placeholder = "Digite sua dúvida...";
             userInput.disabled = false;
             sendBtn.disabled = false;
-
         } catch (error) {
-            loadingContainer.style.display = 'none';
-            addMessage("ai", "Erro ao ler o PDF: " + error.message + ". Verifique se o arquivo está na pasta e se está usando um servidor local (Live Server).");
-            console.error(error);
+            addMessage("ai", "Erro ao ler PDF: " + error.message);
         }
+    }
+
+    // 2. FUNÇÃO INTELIGENTE: Filtrar Conteúdo (O Segredo da Economia)
+    function findRelevantContext(query) {
+        const queryTerms = query.toLowerCase().split(' ').filter(word => word.length > 3); // Ignora palavras curtas (de, o, a, que)
+        
+        if (queryTerms.length === 0) return manualPages.slice(0, 20).map(p => p.originalText).join('\n'); // Se não tiver termos claros, pega o começo
+
+        // Dar pontuação para cada página baseada nos termos
+        const scoredPages = manualPages.map(page => {
+            let score = 0;
+            queryTerms.forEach(term => {
+                if (page.text.includes(term)) score++;
+            });
+            return { ...page, score };
+        });
+
+        // Ordenar por relevância e pegar as Top 15 páginas
+        const topPages = scoredPages
+            .filter(p => p.score > 0)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 15);
+
+        // Se não achou nada relevante, envia as 5 primeiras (Intro) e avisa
+        if (topPages.length === 0) {
+            return "Não encontrei termos específicos, mas aqui está o início do manual: " + manualPages.slice(0, 5).map(p => p.originalText).join('\n');
+        }
+
+        console.log(`Páginas selecionadas: ${topPages.map(p => p.number).join(', ')}`);
+        
+        // Retorna o texto das páginas selecionadas
+        return topPages
+            .sort((a, b) => a.number - b.number) // Reordena por ordem de leitura
+            .map(p => `--- PÁGINA ${p.number} ---\n${p.originalText}`)
+            .join('\n');
     }
 
     function addMessage(sender, text) {
         const div = document.createElement('div');
         div.className = `message ${sender}`;
-        
-        // Converter quebras de linha em HTML simples para melhor leitura
-        // Se a IA mandar Markdown básico como negrito, o innerText ignora, 
-        // mas para manter simples e seguro, usaremos innerText ou replace básico
-        div.innerHTML = text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
-        
+        div.innerHTML = text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         chatWindow.appendChild(div);
         chatWindow.scrollTop = chatWindow.scrollHeight;
     }
 
     function setContext(query) {
+        if(userInput.disabled) return;
         userInput.value = query;
         sendMessage();
     }
 
-    // 2. ENVIAR APENAS O TEXTO PARA O GEMINI
     async function sendMessage() {
         const text = userInput.value.trim();
         if (!text) return;
@@ -262,42 +171,42 @@
 
         const loadingDiv = document.createElement('div');
         loadingDiv.className = 'message ai loading';
-        loadingDiv.innerText = 'Consultando...';
+        loadingDiv.innerText = 'Filtrando manual e consultando IA...';
         chatWindow.appendChild(loadingDiv);
 
         try {
-            // Corpo da requisição simplificado (Apenas TEXTO)
-            const requestBody = {
-                contents: [{
-                    parts: [
-                        {
-                            text: `Você é um assistente especialista na Constituição da Igreja Presbiteriana do Brasil (IPB). 
+            // AQUI ESTÁ A MÁGICA: Seleciona apenas o texto útil
+            const relevantContext = findRelevantContext(text);
+            
+            // Feedback visual (Opcional, para debug)
+            // console.log("Contexto enviado tem tamanho: " + relevantContext.length);
+
+            const fullPrompt = `Você é um assistente especialista na Constituição da Igreja Presbiteriana do Brasil (IPB). 
+                            Responda com base nestes trechos selecionados do Manual Presbiteriano:
                             
-                            CONTEXTO DO MANUAL (Use isso como base absoluta):
-                            ${manualFullText}
+                            ${relevantContext}
                             
                             PERGUNTA DO USUÁRIO:
                             ${text}
                             
-                            Responda de forma direta, clara e cite os artigos.`
-                        }
-                    ]
-                }]
-            };
+                            Responda de forma direta e cite os artigos se estiverem no texto.`;
 
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
+            const response = await fetch('/api/consultar', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestBody)
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: fullPrompt })
             });
 
             const data = await response.json();
             chatWindow.removeChild(loadingDiv);
 
             if (data.error) {
-                addMessage("ai", "Erro na API: " + data.error.message);
+                // Tratamento específico para erro de Quota (429)
+                if (data.error.message && data.error.message.includes("quota")) {
+                    addMessage("ai", "⚠️ <strong>Limite de velocidade atingido.</strong><br>O Google pede que aguardemos alguns segundos. Tente novamente em 30 segundos.");
+                } else {
+                    addMessage("ai", "Erro: " + (data.error.message || JSON.stringify(data.error)));
+                }
             } else {
                 const aiResponse = data.candidates[0].content.parts[0].text;
                 addMessage("ai", aiResponse);
@@ -305,7 +214,8 @@
 
         } catch (error) {
             chatWindow.removeChild(loadingDiv);
-            addMessage("ai", "Erro de conexão: " + error.message);
+            addMessage("ai", "Erro de conexão.");
+            console.error(error);
         } finally {
             userInput.disabled = false;
             sendBtn.disabled = false;
@@ -314,12 +224,7 @@
     }
 
     window.onload = loadAndExtractPdf;
-
-    userInput.addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            sendMessage();
-        }
-    });
+    userInput.addEventListener("keypress", (e) => { if(e.key === "Enter") sendMessage(); });
 </script>
 
 </body>
